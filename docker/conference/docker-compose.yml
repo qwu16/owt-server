@@ -35,6 +35,6 @@ services:
     ports:
       - "3004:3004"
     command: sh -c "service mongodb start && service rabbitmq-server start \
-                    && cd /owt-server/dist/bin && ./init-all.sh && ./start-all.sh && sleep infinity"
+                    && cd /home && ./startowt.sh"
     depends_on:
-      -  owt-server-conference-install
+            -  owt:run
