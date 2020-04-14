@@ -25,12 +25,12 @@ This document is used for generating OWT build and all-in-one OWT running enviro
 Or you can simply run `build_docker_image.sh` to generate both 2 images.
 We provide a `startowt.sh` to launch OWT and expose following parameters to configure:
 
-    ```shell
+```
     --rabbit rabbitmq server address if rabbitmq service is deployed on a different device
     --mongo mongodb server address if mongo service is deployed on a different device, like --mongo=xx.xx.xx.xx/owtdb
     --externalip external ip of host device if there are internal and external ip for host device
     --network_interface network interface for external ip of host device if there are external and internal ip for host device
-    ```
+```
 Note that `externalip` and `network_interface` should be both set if there are external and internal ip on host device. `startowt.sh` is just a reference, you can customize Dockerfile and script to generate the Docker images for cluster deployment. For example, separate each OWT modules into different Docker images.
 
 2. Launch OWT service
