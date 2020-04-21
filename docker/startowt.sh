@@ -4,13 +4,20 @@
 cd /home/owt
 
 mongourl=localhost/owtdb
+LOG=/dev/null
 
 service mongodb start &
 service rabbitmq-server start &
 
-while ! mongo --quiet --eval "db.adminCommand('listDatabases')"
+while ! mongo --quiet --eval "db.adminCommand('listDatabases')" >> $LOG 2>&1
 do
-    echo mongo is not ready
+    echo MongoDB is not ready. Waiting...
+    sleep 1
+done
+
+while ! rabbitmqctl -q status >> $LOG 2>&1
+do
+    echo RabbitMQ is not ready. Waiting...
     sleep 1
 done
 
