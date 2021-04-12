@@ -44,6 +44,7 @@ module.exports.create = function (spec, on_init_ok, on_init_failed) {
         room_id = spec.room,
         origin = spec.origin,
         selfRpcId = spec.selfRpcId,
+        redisClient = spec.redisClient,
         enable_audio_transcoding = config.transcoding && !!config.transcoding.audio,
         enable_video_transcoding = config.transcoding && !!config.transcoding.video,
         internal_conn_protocol = config.internalConnProtocol;

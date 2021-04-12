@@ -237,6 +237,72 @@ var Conference = function (rpcClient, selfRpcId) {
   var rpcChannel = require('./rpcChannel')(rpcClient),
       rpcReq = require('./rpcRequest')(rpcChannel);
 
+  var onSubMessage = (channel, message) => {
+    var msg = JSON.parse(message);
+    if (msg.type === "leave") {
+
+    } else {
+      switch (msg.module) {
+        case 'conference':
+          op = updateSubscription(subscriptionId, command.data);
+          break;
+        case 'roomcontroller':
+          op = setSubscriptionMute(subscriptionId, command.data, true);
+          break;
+        case 'accesscontroller':
+          op = setSubscriptionMute(subscriptionId, command.data, false);
+          break;
+        case 'rtccontroller':
+          op = setSubscriptionMute(subscriptionId, command.data, false);
+          break;
+        case 'quiccontroller':
+          op = setSubscriptionMute(subscriptionId, command.data, false);
+          break;
+        default:
+          op = Promise.reject('Invalid subscription control operation');
+      }
+    }
+
+  }
+
+  var redis = Redis(onSubMessage);
+
+  var loadFromRedis = (room, moduleName, id) => {
+    if (moduleName === "all") {
+      var participantKey = room + "participants";
+      redis.getItems(participantKey)
+          .then(function(streamList){
+            participants = streamList
+          });
+
+      var streamsKey = room + "streams";
+      redis.getItems(streamKey)
+          .then(function(streamList){
+            streams = streamList
+          });
+
+      var subscriptionKey = room + "subscriptions";
+      redis.getItems(subscriptionKey)
+          .then(function(streamList){
+            subscriptions = streamList
+          });
+
+      var trackOwnersKey = room + "trackOwners";
+      redis.getItems(trackOwnersKey)
+          .then(function(streamList){
+            trackOwners = streamList
+          });
+
+    } else if (id !== undefined) {
+      var key = room + moduleName;
+      return redis.getItem(key, id);
+    } else {
+      var key = room + moduleName;
+      return redis.getItems(key);
+    }
+
+  }
+
   var onSessionEstablished = (participantId, sessionId, direction, sessionInfo) => {
     log.debug('onSessionEstablished, participantId:', participantId, 'sessionId:', sessionId, 'direction:', direction, 'sessionInfo:', JSON.stringify(sessionInfo));
     if (direction === 'in') {
@@ -342,6 +408,7 @@ var Conference = function (rpcClient, selfRpcId) {
             room_config = config;
             room_config.internalConnProtocol = global.config.internal.protocol;
             StreamConfigure(room_config);
+            loadFromRedis(roomId, "all");
 
             return new Promise(function(resolve, reject) {
               RoomController.create(
@@ -352,7 +419,8 @@ var Conference = function (rpcClient, selfRpcId) {
                   room: roomId,
                   config: room_config,
                   origin: origin,
-                  selfRpcId: selfRpcId
+                  selfRpcId: selfRpcId,
+                  redisClient: redis
                 },
                 function onOk(rmController) {
                   log.debug('room controller init ok');
@@ -2736,6 +2804,8 @@ var Conference = function (rpcClient, selfRpcId) {
     } else if (message.purpose === 'audio' ||
                message.purpose === 'video') {
       roomController && roomController.onFaultDetected(message.purpose, message.type, message.id);
+    } else if (message.purpose === 'conference') {
+      //Reload redis data since one conference node or agent crashes
     }
   };
 

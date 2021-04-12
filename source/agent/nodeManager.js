@@ -77,7 +77,7 @@ module.exports = function (spec, spawnOptions, onNodeAbnormallyQuit, onTaskAdded
       child.on('close', function (code, signal) {
           log.debug('Node', id, 'exited with code:', code, 'signal:', signal);
           if (code !== 0) {
-              log.info('Node', id, 'is closed on unexpected code:', code);
+              log.info('Node', id, 'is closed on unexpected code:', code, ", signal:", signal);
           }
   
           if (processes[id]) {
